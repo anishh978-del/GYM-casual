@@ -151,6 +151,19 @@ The same build is wrapped with [Capacitor](https://capacitorjs.com) so it can be
 - Build with a **JDK 21** — Gradle 8.11.1 (Capacitor 7) supports Java 17–21 and rejects newer JDKs such as 26. Android Studio's bundled JBR 21 works; see **Gradle and the JDK** below if your default `java` is newer.
 - Accept the SDK licences on first launch; Android Studio sets `ANDROID_HOME` for you.
 
+**No Android Studio?** The command-line SDK is enough:
+
+```bash
+sdkmanager --licenses
+sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+```
+
+Then point Gradle at it in `android/local.properties` (gitignored, created by Android Studio as well):
+
+```properties
+sdk.dir=C:/Users/<you>/Android/Sdk
+```
+
 ### Gradle and the JDK
 
 If `./gradlew` fails with `Unsupported class file major version` or a similar Java-version error, Gradle is picking up a JDK newer than 21. Two ways to fix it:
