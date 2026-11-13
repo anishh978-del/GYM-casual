@@ -148,8 +148,23 @@ The same build is wrapped with [Capacitor](https://capacitorjs.com) so it can be
   - Android SDK Build-Tools
   - Android SDK Command-line Tools
   - an emulator image, or use a phone with **USB debugging** enabled
-- Build with Android Studio's bundled **JDK 21** — Gradle rejects newer JDKs (e.g. 26).
+- Build with a **JDK 21** — Gradle 8.11.1 (Capacitor 7) supports Java 17–21 and rejects newer JDKs such as 26. Android Studio's bundled JBR 21 works; see **Gradle and the JDK** below if your default `java` is newer.
 - Accept the SDK licences on first launch; Android Studio sets `ANDROID_HOME` for you.
+
+### Gradle and the JDK
+
+If `./gradlew` fails with `Unsupported class file major version` or a similar Java-version error, Gradle is picking up a JDK newer than 21. Two ways to fix it:
+
+- **Android Studio** — **Settings → Build, Execution, Deployment → Build Tools → Gradle → Gradle JDK: 21** (the bundled JBR is 21 and already the default).
+- **Command line** — install a JDK 21 and add this line to `%USERPROFILE%\.gradle\gradle.properties` (on Linux/macOS: `~/.gradle/gradle.properties`):
+
+```properties
+org.gradle.java.home=C:/path/to/jdk-21
+```
+
+Verify with `cd android && ./gradlew --version` — the output should show a JVM 21 for **Daemon JVM**. The launcher may still report your newer Java; that line is the one that matters.
+
+On this PC Temurin 21 is installed at `C:\Users\anish\jdks\jdk-21.0.13+9` and that `gradle.properties` entry is already set, so Gradle builds work even though `java -version` reports 26.
 
 ### Commands
 
