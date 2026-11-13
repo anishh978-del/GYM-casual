@@ -128,7 +128,8 @@ button:disabled {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 9px max(12px, env(safe-area-inset-left)) 9px max(12px, env(safe-area-inset-right));
+  padding: max(9px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-left)) 9px
+    max(12px, env(safe-area-inset-right));
   background: rgba(253, 246, 233, 0.94);
   border-bottom: 1px solid var(--line);
   backdrop-filter: blur(10px);

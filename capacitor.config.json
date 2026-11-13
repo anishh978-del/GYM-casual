@@ -1,5 +1,8 @@
 {
   "appId": "com.sapna.fitness",
   "appName": "Sapna Fitness",
-  "webDir": "dist"
+  "webDir": "dist",
+  "android": {
+    "adjustMarginsForEdgeToEdge": "auto"
+  }
 }
