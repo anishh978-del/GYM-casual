@@ -1,6 +1,5 @@
-# Sapna Fitness · ಸಪ್ನಾ ಫಿಟ್ನೆಸ್
+# Sapna Fitness ·
 
-A Kannada-first workout PWA: one body part a day, six days a week, Sunday rest. No login and no backend — the plan, progress and settings live in the device's `localStorage`, and progress can optionally be mirrored to Firestore so family members can follow along.
 
 **Live:** https://anishh978-del.github.io/GYM-casual/ · **Read-only progress page:** https://anishh978-del.github.io/GYM-casual/?view=family
 
