@@ -170,7 +170,9 @@ const maskable = paint(MASTER, 'maskable');
 const outputs = [
   ['icon-192.png', 192, regular],
   ['icon-512.png', 512, regular],
+  ['icon-1024.png', 1024, regular],
   ['maskable-512.png', 512, maskable],
+  ['maskable-1024.png', 1024, maskable],
   ['apple-touch-icon.png', 180, regular],
 ];
 
