@@ -1,32 +1,53 @@
-# ಸಪ್ನಾ ಫಿಟ್ನೆಸ್ · Sapna Fitness
+# Sapna Fitness · ಸಪ್ನಾ ಫಿಟ್ನೆಸ್
 
-A small, Kannada-first workout PWA for Sapna (45): one body part a day, six days a week, Sunday rest.
-No login, no backend — the plan, progress and settings live in the phone's `localStorage`, and progress can optionally be mirrored to Firestore so the family can follow along.
+A Kannada-first workout PWA: one body part a day, six days a week, Sunday rest. No login and no backend — the plan, progress and settings live in the device's `localStorage`, and progress can optionally be mirrored to Firestore so family members can follow along.
 
-**Live:** https://anishh978-del.github.io/GYM-casual/ · **Family view:** https://anishh978-del.github.io/GYM-casual/?view=family
+**Live:** https://anishh978-del.github.io/GYM-casual/ · **Read-only progress page:** https://anishh978-del.github.io/GYM-casual/?view=family
 
-## What's inside
+## Features
 
-- **Today** — greeting, today's workout card with a big **ಪ್ರಾರಂಭಿಸಿ / START**, 7-day strip, weekly progress and streak.
-- **Day plan** — one exercise card per movement with tap-to-tick completion and a celebration when the day is done.
-- **Exercise** — looping demo (photo pair or animated stick figure), set circles, 60-second rest timer with a soft beep, large countdown for timed exercises, steps and a red safety banner.
+- **Today** — greeting, today's workout card with a large start button, a 7-day strip, weekly progress and streak.
+- **Day plan** — one card per exercise with tap-to-tick completion and a celebration when the day is done.
+- **Exercise** — looping demo (photo pair or animated stick figure), set circles, 60-second rest timer with a soft beep, large countdown for timed exercises, numbered steps and a safety banner, optional spoken instructions.
 - **Week** — any week, per-day completion and today marker.
-- **Help** — what a set/reps mean, rest and safety, call the trainer (once a phone number is added), image credits.
-- **Editor** (⚙️) — PIN-protected planning: edit days and exercises, reorder, change media, edit the profile, cloud sync, export/import JSON, reset to the default plan.
-- **Family progress** (`?view=family`) — read-only page that follows the synced progress live.
+- **Help** — what a set and reps mean, rest and safety, trainer contact (once a number is set), credits.
+- **Editor** (⚙️) — PIN-protected: edit days and exercises, reorder, change demo media, edit the profile, configure cloud sync, export/import JSON, reset to the default plan.
+- **Family progress** (`?view=family`) — read-only page that follows synced progress live.
+- **Offline-first PWA** — installable, precached by a service worker, works without a connection.
 
-### Language
+## Language
 
-The header toggle switches between **ಕನ್ನಡ** and **English**, and the choice is remembered in `localStorage`.
+The header toggle switches between **ಕನ್ನಡ** and **English**; the choice is remembered in `localStorage`.
 
-- **Kannada mode** — Kannada first, with the English name smaller underneath.
+- **Kannada mode** — Kannada first, with the English name in smaller type underneath.
 - **English mode** — everything is English: day and exercise names, steps, targets, buttons, rest timer, celebration, help, editor, tooltips, aria-labels and the browser tab title. It never falls back to Kannada. The Listen button uses an English (`en-IN`) voice.
 
-All text, including the day and exercise names of the default plan, lives in `src/lib/i18n.js` (`UI.kn`, `UI.en` and `PLAN_TEXT`).
+All strings, including the day and exercise names of the default plan, live in `src/lib/i18n.js` (`UI.kn`, `UI.en`, `PLAN_TEXT`). Text size is adjustable in the header (`A−` / `A+`).
+
+## Tech stack
+
+- React 18 + Vite 5, plain CSS, hash routing (`#/day/2026-11-14`, `#/week`, …)
+- `vite-plugin-pwa` (Workbox) for the manifest, precaching and offline support
+- Optional Firebase 11 (Firestore only, loaded lazily when configured)
+- Capacitor 7 for the Android build
+- Noto Sans Kannada webfont, bundled locally
+
+```
+src/
+  screens/       Today, Day, Exercise, Week, Help, Editor, Family progress
+  components/    Header, WeekStrip, ExerciseMedia, RestTimer, Celebration, …
+  lib/           i18n, store, cloudSync, dates, hooks
+  data/          plan, exercise image mapping, Firebase config
+public/
+  exercises/     bundled free-exercise-db image pairs
+  icons/         PWA icons
+android/         Capacitor Android project
+tools/           icon, asset and media generators
+```
 
 ## Development
 
-Requires Node 18+.
+Node 20+ (`@capacitor/cli` requires it).
 
 ```bash
 npm install
@@ -35,163 +56,53 @@ npm run build      # production build in dist/
 npm run preview    # serve the production build (http://localhost:4173)
 ```
 
-The build is a complete static site. `vite.config.js` uses `base: './'` and hash routing (`#/day/...`), so it works from a domain root or a sub-folder without server rewrite rules.
+The output is a plain static site. `vite.config.js` uses `base: './'` and hash routing, so it works from a domain root, a sub-folder or inside a native WebView without server rewrite rules.
 
-### Install on the phone
+### Install as a phone app
 
-Open the deployed URL in Chrome (Android) → menu → **Add to Home screen**. After the first visit the service worker precaches the app, plan, fonts and all exercise images, so it keeps working offline. On first load while online, wait a few seconds for precaching to finish.
-
-## Cloud sync (optional, Firebase free tier)
-
-Sync is off until you add a Firebase project. Without it the app is unchanged: everything works offline from `localStorage`.
-
-**How it works**
-
-- `localStorage` stays the main storage. Every change is saved on the phone first.
-- When online, the app writes one compact snapshot to a single Firestore document: member name, the plan, completed exercises and sets for the last 120 days, the current streak and this week's count.
-- The write is debounced (about 2.5 s after a change) and retried when the device comes back online. Offline changes are kept and pushed on reconnect; the newest write wins.
-- The family page listens to that document with `onSnapshot`, shows it read-only, and caches the last snapshot so it can still display something offline.
-- No login is used. The document ID is the only secret — keep it long and unguessable and keep the Firestore rules restricted to it (below).
-
-### 1. Create the Firebase project
-
-1. Open <https://console.firebase.google.com> and click **Add project**.
-2. Name it (for example `sapna-fitness`), continue, and you can disable Google Analytics.
-3. In the new project, open **Build → Firestore Database → Create database**.
-4. Choose a location close to you and start in **production mode** (rules are added in step 4).
-
-### 2. Register the web app
-
-1. In **Project settings → Your apps**, click the `</>` (web) icon.
-2. Give it a nickname and register (no hosting needed).
-3. Copy the `firebaseConfig` object shown.
-
-### 3. Paste the config
-
-Open `src/data/firebaseConfig.js` and paste the values:
-
-```js
-export const firebaseConfig = {
-  apiKey: 'AIza…',
-  authDomain: 'sapna-fitness.firebaseapp.com',
-  projectId: 'sapna-fitness',
-  storageBucket: 'sapna-fitness.appspot.com',
-  messagingSenderId: '123456789',
-  appId: '1:123456789:web:abc123',
-};
-```
-
-`isCloudConfigured()` turns sync on as soon as `apiKey` and `projectId` are filled in — the Firebase SDK is only loaded at that point, so the app stays offline-first. Rebuild (`npm run build`) and deploy again.
-
-### 4. Firestore rules
-
-Because there is no login, the rules must allow anonymous access to exactly this one document (no other data in the project). In **Firestore → Rules**:
-
-```js
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /familyProgress/sapna-daily-progress-7c4e91 {
-      allow read, write: if true;
-    }
-  }
-}
-```
-
-The collection is `familyProgress` and the document ID is `CLOUD_DOC_ID` in `src/data/firebaseConfig.js` — change both if you want a different secret. Anyone who knows the deployed URL and the doc ID can read (and, with these rules, overwrite) this document, so do not store anything more personal than a first name and exercise progress. If you need stronger protection, use Firebase Anonymous Auth or App Check and tighten the rules.
-
-### 5. Open the family page
-
-After deploying, open:
-
-```
-https://<your-site>/?view=family
-```
-
-(the query string goes **before** the `#`). The page shows the badge **Family view · Read only**, today's workout, streak and this week, plus the same 7-day strip. It updates live while open and shows the last cached snapshot when offline. Language and text size on that page follow that phone's own settings.
-
-## Adding a real video or photo
-
-Open **⚙️ → PIN → days → ✏️ day → ✏️ exercise → Demo media**. Default PIN: **1234** (change it under Profile).
-
-| Source | What it does |
-| --- | --- |
-| **Auto** | Uses the mapped photo pair / SVG animation below. |
-| **Image pair** | Pick one of the 31 locally stored free-exercise-db pairs. |
-| **YouTube link** | Paste a normal YouTube URL; it plays in the exercise screen (needs internet). |
-| **Upload video** | Upload an MP4/WebM/MOV up to 2.5 MB, stored in localStorage as a data URL. |
-| **Upload image / GIF** | Upload a GIF or image up to 2.5 MB. |
-
-Exercise images can also be changed in code: `src/data/exerciseMedia.js` maps every plan exercise to a free-exercise-db `datasetId` (files in `public/exercises/<id>/0.jpg` and `1.jpg`). The app never hotlinks the dataset at runtime. Exercises without a good dataset match (`cardio`, `cycling`, `walking`, `stretching`, `surya-namaskar`, `pushups-modified`) use the animated stick-figure fallback in `src/lib/animations.js`.
-
-## Data and backup
-
-Everything is stored under the localStorage key `sapna-fitness:v1` (older `vani-fitness:v1` data is migrated on first load, including the name). In **Editor → Data** you can:
-
-- download or copy a JSON backup of the profile + plan (file name `sapna-fitness-plan-<date>.json`),
-- import a JSON file or pasted JSON,
-- reset to the default plan.
-
-Local times of the last sync are kept under `sapna-fitness:lastSync`; the family page caches its snapshot under `sapna-family:cache`.
-
-Default plan: 01-10-2026 → 01-04-2027, "One day one body part" at U.S. Fitness Club, trainer ಉಮೇಶ್ / Umesh. Stretching is set to 5 minutes and Russian Twist to 15 × 2 as specified.
+Open the deployed URL in Chrome on Android → menu → **Add to Home screen**. After the first visit the service worker precaches the app, fonts and exercise images, so it keeps working offline. Leave the first load online for a few seconds so precaching can finish.
 
 ## Android app (Capacitor)
 
-The same build is wrapped with [Capacitor](https://capacitorjs.com) so it can be installed as a real Android app. `capacitor.config.json` sets `appId` `com.sapna.fitness`, `appName` `Sapna Fitness` and `webDir` `dist`. Vite's `base: './'` and the hash routes keep every asset working inside the app's local `https://localhost` WebView, and the service worker still registers, so the app keeps working offline.
+The same build is wrapped with [Capacitor](https://capacitorjs.com). `capacitor.config.json` sets `appId` `com.sapna.fitness`, `appName` `Sapna Fitness` and `webDir` `dist`. Relative asset paths and hash routes keep everything working inside the app's `https://localhost` WebView, and the service worker still registers, so the app works offline.
 
-### What to install on the PC
+### Prerequisites
 
-- **Node.js 20+**
-- **Android Studio** (latest), which includes the Android SDK and a JDK. In **SDK Manager** install:
-  - Android SDK Platform 35 (Capacitor 7 target)
-  - Android SDK Build-Tools
-  - Android SDK Command-line Tools
-  - an emulator image, or use a phone with **USB debugging** enabled
-- Build with a **JDK 21** — Gradle 8.11.1 (Capacitor 7) supports Java 17–21 and rejects newer JDKs such as 26. Android Studio's bundled JBR 21 works; see **Gradle and the JDK** below if your default `java` is newer.
-- Accept the SDK licences on first launch; Android Studio sets `ANDROID_HOME` for you.
-
-**No Android Studio?** The command-line SDK is enough:
+- **Android Studio** (recommended), with **Android SDK Platform 35**, SDK Build-Tools and either an emulator or a phone with USB debugging.
+- Or the command-line SDK only:
 
 ```bash
 sdkmanager --licenses
 sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
 ```
 
-Then point Gradle at it in `android/local.properties` (gitignored, created by Android Studio as well):
+and point Gradle at it in `android/local.properties` (gitignored):
 
 ```properties
-sdk.dir=C:/Users/<you>/Android/Sdk
+sdk.dir=/path/to/Android/Sdk
 ```
 
-### Gradle and the JDK
-
-If `./gradlew` fails with `Unsupported class file major version` or a similar Java-version error, Gradle is picking up a JDK newer than 21. Two ways to fix it:
-
-- **Android Studio** — **Settings → Build, Execution, Deployment → Build Tools → Gradle → Gradle JDK: 21** (the bundled JBR is 21 and already the default).
-- **Command line** — install a JDK 21 and add this line to `%USERPROFILE%\.gradle\gradle.properties` (on Linux/macOS: `~/.gradle/gradle.properties`):
+Use **JDK 21**. Gradle 8.11.1 supports Java 17–21; newer JDKs fail with `Unsupported class file major version`. Android Studio's bundled JDK 21 works. For a command-line build on a machine whose default Java is newer, add to `~/.gradle/gradle.properties` (`%USERPROFILE%\.gradle\gradle.properties` on Windows):
 
 ```properties
-org.gradle.java.home=C:/path/to/jdk-21
+org.gradle.java.home=/path/to/jdk-21
 ```
 
-Verify with `cd android && ./gradlew --version` — the output should show a JVM 21 for **Daemon JVM**. The launcher may still report your newer Java; that line is the one that matters.
+`cd android && ./gradlew --version` should report a JVM 21 for **Daemon JVM**.
 
-On this PC Temurin 21 is installed at `C:\Users\anish\jdks\jdk-21.0.13+9` and that `gradle.properties` entry is already set, so Gradle builds work even though `java -version` reports 26.
-
-### Commands
+### Build
 
 ```bash
-npm install            # once
-npm run build          # Vite → dist/
-npx cap add android    # once: creates android/
-npx cap sync android   # after every build: copies dist/ and plugins into the app
-npx cap open android   # opens the project in Android Studio
+npm install
+npm run build
+npx cap add android      # first time only: creates android/
+npx cap sync android     # after every web build: copies dist/ and plugins
+npx cap open android     # opens the project in Android Studio
 ```
 
-Then in Android Studio: **Build → Build Bundle(s)/APK(s) → Build APK(s)**. The debug APK lands in `android/app/build/outputs/apk/debug/app-debug.apk`; copy it to the phone and install it (allow "install unknown apps" for the file manager).
+In Android Studio: **Build → Build Bundle(s)/APK(s) → Build APK(s)**. The debug APK is written to `android/app/build/outputs/apk/debug/app-debug.apk`; copy it to the phone and install it (allow "install unknown apps" for the file manager).
 
-Without Android Studio, the same debug APK can be built with `cd android && ./gradlew assembleDebug` (Windows: `gradlew.bat assembleDebug`), but the Android SDK and a supported JDK still have to be installed.
+Without Android Studio: `cd android && ./gradlew assembleDebug` (Windows: `gradlew.bat assembleDebug`).
 
 After any web change: `npm run build && npx cap sync android`, then rebuild the APK.
 
@@ -207,20 +118,103 @@ npx capacitor-assets generate --android \
   --splashBackgroundColor "#fdf6e9" --splashBackgroundColorDark "#fdf6e9"
 ```
 
-`android/app/src/main/assets/public/` is generated by `npx cap sync` and is gitignored; run the sync before building the APK from a fresh clone.
+`android/app/src/main/assets/public/` is generated by `npx cap sync` and is gitignored — run the sync before building from a fresh clone.
 
-## Deploy for free
+## Cloud sync (optional, Firebase free tier)
 
-The output is plain static files — no server required.
+Sync stays off until a Firebase project is configured; without it the app is unchanged and fully offline.
 
-**Netlify** — drag `dist/` into Netlify Drop, or connect the repo with build command `npm run build` and publish directory `dist`. No redirects needed (hash routing).
+- `localStorage` remains the source of truth. Changes are written on the device first.
+- When online, the app writes one compact snapshot to a single Firestore document: member name, plan, completed exercises and sets for the last 120 days, current streak and this week's total.
+- Writes are debounced (~2.5 s) and retried on reconnect; the newest write wins.
+- The family page subscribes with `onSnapshot`, renders read-only, and caches the last snapshot for offline display.
+- There is no login. The document ID is the only access control — keep it long and unguessable.
 
-**Vercel** — import the repo; framework preset **Vite**, build `npm run build`, output `dist`. No rewrites needed.
+### 1. Create the project
 
-**GitHub Pages** — already configured: `.github/workflows/deploy.yml` builds and publishes `dist/` on every push to `main`, so the live site is <https://anishh978-del.github.io/GYM-casual/>. Enable it once under **Settings → Pages → Source: GitHub Actions**. The relative `base` and hash routes make it work at `https://<user>.github.io/<repo>/` without extra configuration.
+1. <https://console.firebase.google.com> → **Add project**.
+2. In the project: **Build → Firestore Database → Create database**, choose a region, start in **production mode**.
 
-Remember to add your deployed domain to **Firebase → Authentication → Settings → Authorized domains** only if you later enable Auth; plain Firestore rules do not require it.
+### 2. Register the web app
+
+In **Project settings → Your apps**, click `</>`, register the app (hosting not needed) and copy the `firebaseConfig` object.
+
+### 3. Paste the config
+
+Fill in `src/data/firebaseConfig.js`:
+
+```js
+export const firebaseConfig = {
+  apiKey: 'AIza…',
+  authDomain: 'your-project.firebaseapp.com',
+  projectId: 'your-project',
+  storageBucket: 'your-project.appspot.com',
+  messagingSenderId: '123456789',
+  appId: '1:123456789:web:abc123',
+};
+```
+
+Sync switches on as soon as `apiKey` and `projectId` are set — the SDK is only loaded at that point, so the app stays offline-first. Rebuild and redeploy.
+
+### 4. Firestore rules
+
+With no login, the rules must allow anonymous access to exactly one document. Replace `<DOC_ID>` with the value of `CLOUD_DOC_ID` in `src/data/firebaseConfig.js`:
+
+```js
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /familyProgress/<DOC_ID> {
+      allow read, write: if true;
+    }
+  }
+}
+```
+
+The collection is `familyProgress`. Anyone who knows the site URL and the document ID can read — and with these rules overwrite — that document, so store nothing more personal than a first name and exercise progress. For stronger protection, enable Firebase Anonymous Auth or App Check and tighten the rules.
+
+### 5. Open the family page
+
+```
+https://<your-site>/?view=family
+```
+
+The query string goes **before** the `#`. The page shows a read-only badge, today's workout, streak, this week and the 7-day strip. It updates live while open and falls back to the cached snapshot offline. Language and text size follow that device's own settings.
+
+## Exercise media
+
+Open **⚙️ → PIN → days → ✏️ day → ✏️ exercise → Demo media**. The default PIN is `1234`; change it under **Editor → Profile**.
+
+| Source | What it does |
+| --- | --- |
+| **Auto** | Uses the mapped photo pair or SVG animation. |
+| **Image pair** | One of the 31 bundled free-exercise-db pairs. |
+| **YouTube link** | Plays a normal YouTube URL in the exercise screen (needs internet). |
+| **Upload video** | MP4/WebM/MOV up to 2.5 MB, stored in `localStorage` as a data URL. |
+| **Upload image / GIF** | Image or GIF up to 2.5 MB. |
+
+In code, `src/data/exerciseMedia.js` maps each plan exercise to a free-exercise-db `datasetId` (`public/exercises/<id>/0.jpg` and `1.jpg`). Images are bundled, never hotlinked at runtime. Exercises without a good dataset match (cardio, cycling, walking, stretching, Surya Namaskar, modified push-ups) use the animated stick-figure fallback in `src/lib/animations.js`.
+
+## Data and storage
+
+Everything is stored under the `sapna-fitness:v1` key. **Editor → Data** can:
+
+- download or copy a JSON backup of the profile and plan (`sapna-fitness-plan-<date>.json`),
+- import a JSON file or pasted JSON,
+- reset to the default plan.
+
+The last sync time is kept under `sapna-fitness:lastSync`; the family page caches its snapshot under `sapna-family:cache`.
+
+## Deploy
+
+Static files only — no server.
+
+- **GitHub Pages** — this repo deploys automatically: `.github/workflows/deploy.yml` builds and publishes `dist/` on every push to `main`. Enable it once under **Settings → Pages → Source: GitHub Actions**.
+- **Netlify** — drag `dist/` into Netlify Drop, or connect the repo with build command `npm run build` and publish directory `dist`. No redirects needed.
+- **Vercel** — import the repo, framework preset **Vite**, build `npm run build`, output `dist`. No rewrites needed.
+
+If you later enable Firebase Auth, add the deployed domain under **Authentication → Settings → Authorized domains**; plain Firestore rules do not need it.
 
 ## Credits
 
-Exercise images and names come from [free-exercise-db](https://github.com/yuhonas/free-exercise-db) (Unlicense, public domain) and are bundled locally in `public/exercises/`. Font: Noto Sans Kannada (SIL Open Font License). Icons are generated by `tools/make-icons.mjs`.
+Exercise images and names come from [free-exercise-db](https://github.com/yuhonas/free-exercise-db) (Unlicense, public domain) and are bundled in `public/exercises/`. Font: Noto Sans Kannada (SIL Open Font License). Icons are generated by `tools/make-icons.mjs`.
