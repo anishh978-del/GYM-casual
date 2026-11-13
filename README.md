@@ -3,6 +3,8 @@
 A small, Kannada-first workout PWA for Sapna (45): one body part a day, six days a week, Sunday rest.
 No login, no backend — the plan, progress and settings live in the phone's `localStorage`, and progress can optionally be mirrored to Firestore so the family can follow along.
 
+**Live:** https://anishh978-del.github.io/GYM-casual/ · **Family view:** https://anishh978-del.github.io/GYM-casual/?view=family
+
 ## What's inside
 
 - **Today** — greeting, today's workout card with a big **ಪ್ರಾರಂಭಿಸಿ / START**, 7-day strip, weekly progress and streak.
