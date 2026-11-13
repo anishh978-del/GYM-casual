@@ -144,7 +144,7 @@ The output is plain static files — no server required.
 
 **Vercel** — import the repo; framework preset **Vite**, build `npm run build`, output `dist`. No rewrites needed.
 
-**GitHub Pages** — run `npm run build`, then publish `dist/` (for example with an Actions workflow or the `gh-pages` package). The relative `base` and hash routes make it work at `https://<user>.github.io/<repo>/` without extra configuration.
+**GitHub Pages** — already configured: `.github/workflows/deploy.yml` builds and publishes `dist/` on every push to `main`, so the live site is <https://anishh978-del.github.io/GYM-casual/>. Enable it once under **Settings → Pages → Source: GitHub Actions**. The relative `base` and hash routes make it work at `https://<user>.github.io/<repo>/` without extra configuration.
 
 Remember to add your deployed domain to **Firebase → Authentication → Settings → Authorized domains** only if you later enable Auth; plain Firestore rules do not require it.
 
